@@ -8,6 +8,7 @@
 
 // Core ros functionality like ros::init and spin
 #include <ros/ros.h>
+#include <ros/package.h>
 // ROS Trajectory Action server definition
 #include <control_msgs/FollowJointTrajectoryAction.h>
 // Means by which we communicate with above action-server
@@ -20,21 +21,26 @@
 #include <descartes_trajectory/cart_trajectory_pt.h>
 // Includes the planner we will be using
 #include <descartes_planner/dense_planner.h>
-#include <descartes_planner/sparse_planner.h>
 
+//The path is build using points in the eigen convention
 #include <eigen_conversions/eigen_msg.h>
 
+//So we can visualize the path
 #include <visualization_msgs/Marker.h>
 
+//The headers to access files.
 #include <iostream>
 #include <fstream>
 
 #include <math.h>
 
+//Some tricks from boost
 #include <boost/algorithm/string.hpp>
 
+//Our character definitions
 #include "Alfa.h"
 
+//Definitions for the path visualization
 #define   AXIS_LINE_WIDTH 0.001
 #define   AXIS_LINE_LENGHT 0.01
 #define   WORLD_FRAME "base_link"
@@ -42,7 +48,7 @@
 // Offsets
 float safeOffset = 0.1;
 float xOffset = 0.355;
-float yOffset = 0.0; // Has to be a function
+float yOffset = 0.0;
 float step = 0.005;
 
 typedef std::vector<descartes_core::TrajectoryPtPtr> TrajectoryVec;
@@ -50,7 +56,6 @@ typedef TrajectoryVec::const_iterator TrajectoryIter;
 
 ros::Publisher marker_publisher_;
 
-//@TODO: CRAP, the path is in the wrong direction! STart at the top, not the bottom
 //Interpolate a path between the "Home" pose and the first point in the path.
 EigenSTL::vector_Affine3d addLeadin(EigenSTL::vector_Affine3d points)
 {
@@ -68,8 +73,6 @@ EigenSTL::vector_Affine3d addLeadin(EigenSTL::vector_Affine3d points)
   for(int i=0; i<11; i++)
   {
     pose = Eigen::Translation3d(0.30 + xStep * (10 - i), yStep * (10 - i), 0.40 - zStep * (10 - i));
-
-    //points.push_back(pose);
     points.insert(points.begin(), pose);
   }
   return points;
@@ -98,6 +101,7 @@ EigenSTL::vector_Affine3d addLeadout(EigenSTL::vector_Affine3d points)
   return points;
 }
 
+//Publish the path visualization to rviz
 void publishPosesMarkers(const EigenSTL::vector_Affine3d& poses)
 {
   // creating rviz markers
@@ -193,7 +197,6 @@ void publishPosesMarkers(const EigenSTL::vector_Affine3d& poses)
 
 }
 
-
 /**
  * Generates an completely defined (zero-tolerance) cartesian point from a pose
  */
@@ -235,15 +238,6 @@ int main(int argc, char** argv)
   {
     TrajectoryVec path;
     EigenSTL::vector_Affine3d points;
-
-    //@TODO: Text accepteren op commandline, text matchen met bestaande paden: indien bestaat uitvoeren, anders text splitsen tot letters, points creeren en pad berekenen.
-  //  points = createA(points, safeOffset, xOffset, yOffset, step);
-  //  points = createB(points, safeOffset, xOffset, -0.055, step);
-  //  points = createC(points, safeOffset, xOffset, 0.125, step);
-  //  points = createD(points, safeOffset, xOffset, 0.055, step);
-  //  points = createE(points, safeOffset, xOffset, yOffset, step);
-  //  points = createF(points, safeOffset, xOffset, -0.055, step);
-  //  points = createG(points, safeOffset, xOffset, -0.110, step);
     
     std::string text;
     std::cout << "Enter text to draw: ";
@@ -375,7 +369,8 @@ int main(int argc, char** argv)
     {
       publishPosesMarkers(points);
 
-      std::ifstream pathfile ("/home/bas/catkin_ws_multirob/" + text + ".path");
+      std::string packagePath = ros::package::getPath("ar_por");
+      std::ifstream pathfile (packagePath + "/paths/" + text + ".path");
       
       if (pathfile.is_open()) 
       {
@@ -470,11 +465,12 @@ int main(int argc, char** argv)
           // 5. Translate the result into a type that ROS understands
           // Generate a ROS joint trajectory with the result path, robot model, given joint names,
           // a certain time delta between each trajectory point
-          trajectory_msgs::JointTrajectory joint_solution = toROSJointTrajectory(result, *model, names, 2.0);
+          trajectory_msgs::JointTrajectory joint_solution = toROSJointTrajectory(result, *model, names, 0.1);
 
 
           //Write the path to a path file, for later reference.
-          std::ofstream outputFile("/home/bas/catkin_ws_multirob/" + text + ".path");
+          std::string packagePath = ros::package::getPath("ar_por");
+          std::ofstream pathfile (packagePath + "/paths/" + text + ".path");
           for(int i=0; i<joint_solution.points.size() - 1; i++)
           {
             outputFile << joint_solution.points[i].time_from_start << "\t";
