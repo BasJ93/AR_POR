@@ -1,9 +1,0 @@
-<?xml version="1.0"?>
-<launch>
-  <arg name="sim" default="true"/>
-  <include file="$(find abb_irb120_moveit_config)/launch/moveit_planning_execution.launch">
-    <arg name="sim" value="$(arg sim)"/>
-  </include>
-  <node name="arm_irb120" pkg="ar_por" type="arm_irb120" output="screen" />
-
-</launch>
