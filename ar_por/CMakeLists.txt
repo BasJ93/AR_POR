@@ -9,6 +9,7 @@ project(ar_por)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   roscpp
+  roslib
   descartes_core
   descartes_moveit
   descartes_trajectory

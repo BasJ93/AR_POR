@@ -8,6 +8,7 @@
 
 // Core ros functionality like ros::init and spin
 #include <ros/ros.h>
+#include <ros/package.h>
 // ROS Trajectory Action server definition
 #include <control_msgs/FollowJointTrajectoryAction.h>
 // Means by which we communicate with above action-server
@@ -370,7 +371,8 @@ int main(int argc, char** argv)
     {
       publishPosesMarkers(points);
 
-      std::ifstream pathfile ("/home/bas/catkin_ws_multirob/" + text + ".path");
+      std::string packagePath = ros::package::getPath("ar_por");
+      std::ifstream pathfile (packagePath + "/paths/" + text + ".path");
       
       if (pathfile.is_open()) 
       {
@@ -471,11 +473,12 @@ int main(int argc, char** argv)
           // 5. Translate the result into a type that ROS understands
           // Generate a ROS joint trajectory with the result path, robot model, given joint names,
           // a certain time delta between each trajectory point
-          trajectory_msgs::JointTrajectory joint_solution = toROSJointTrajectory(result, *model, names, 2.0);
+          trajectory_msgs::JointTrajectory joint_solution = toROSJointTrajectory(result, *model, names, 0.1);
 
 
           //Write the path to a path file, for later reference.
-          std::ofstream outputFile("/home/bas/catkin_ws_multirob/" + text + ".path");
+          std::string packagePath = ros::package::getPath("ar_por");
+          std::ofstream pathfile (packagePath + "/paths/" + text + ".path");
           for(int i=0; i<joint_solution.points.size() - 1; i++)
           {
             outputFile << joint_solution.points[i].time_from_start << "\t";
