@@ -1,0 +1,66 @@
+<?xml version="1.0" ?>
+<robot name="irb120_pen" xmlns:xacro="http://ros.org/wiki/xacro">
+  <!-- Dummy base link -->
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <box size="0.2 0.2 0.01"/>
+      </geometry>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.2 0.2 0.01"/>
+      </geometry>
+    </collision>  
+  </link>
+  
+  <!-- Include IRB120 model -->
+  
+  <xacro:include filename="$(find abb_irb120_support)/urdf/irb120_macro.xacro" />
+  <xacro:abb_irb120 prefix="arm_"/>
+  
+  <joint name="base_link_to_arm_base_link" type="fixed">
+    <parent link="base_link"/>
+    <child link="arm_base_link"/>
+  </joint>
+  
+  <!-- Add pencil tool to arm. -->
+  <link name="pencil">
+    <inertial>
+      <mass value="0.0"/>
+      <origin rpy="0 0 0" xyz="0.01415 0.0 -0.00682" />
+      <inertia ixx="0.0" ixy="0" ixz="0" iyy="0.0" iyz="0" izz="0.0"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <mesh filename="package://irb120_pen_support/meshes/visual/irb120_pen.stl"/>
+      </geometry>
+      <material name="">
+        <color rgba="0.7372549 0.3490196 0.1607843 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <mesh filename="package://irb120_pen_support/meshes/collision/irb120_pen.stl"/>
+      </geometry>
+      <material name="">
+        <color rgba="1 1 0 1"/>
+      </material>
+    </collision>
+  </link>
+  <link name="pencil_tip"/>
+
+  <joint name="tool0-pencil" type="fixed">
+    <parent link="arm_tool0"/>
+    <child link="pencil"/>
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+  </joint>
+  <joint name="pencil-pencil_tip" type="fixed">
+    <parent link="pencil"/>
+    <child link="pencil_tip"/>
+    <origin rpy="0 0 0" xyz="0.020 0 -0.075"/>
+  </joint>
+</robot>
+

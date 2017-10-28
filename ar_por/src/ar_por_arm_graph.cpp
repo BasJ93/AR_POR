@@ -468,7 +468,7 @@ int main(int argc, char** argv)
           descartes_planner::PlanningGraph _planningGraph(model);
           
           bool success = _planningGraph.insertGraph(&path);
-          ROS_INFO("Graph insert: %s", success);
+          ROS_INFO("Graph insert: %i", success);
           
           // 5. Translate the result into a type that ROS understands
           // Generate a ROS joint trajectory with the result path, robot model, given joint names,
@@ -481,14 +481,14 @@ int main(int argc, char** argv)
           std::ofstream pathfile (packagePath + "/paths/" + text + ".path");
           for(int i=0; i<joint_solution.points.size() - 1; i++)
           {
-            outputFile << joint_solution.points[i].time_from_start << "\t";
+            pathfile << joint_solution.points[i].time_from_start << "\t";
             for(int j=0; j<6; j++)
             {
-              outputFile << joint_solution.points[i].positions[j] << "\t";
+              pathfile << joint_solution.points[i].positions[j] << "\t";
             }
-            outputFile << "\n";
+            pathfile << "\n";
           }
-          outputFile.close();
+          pathfile.close();
 
           // 6. Send the ROS trajectory to the robot for execution
           if (!executeTrajectory(joint_solution))

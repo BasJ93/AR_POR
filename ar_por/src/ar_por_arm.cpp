@@ -8,6 +8,7 @@
 
 // Core ros functionality like ros::init and spin
 #include <ros/ros.h>
+#include <ros/package.h>
 // ROS Trajectory Action server definition
 #include <control_msgs/FollowJointTrajectoryAction.h>
 // Means by which we communicate with above action-server
@@ -368,7 +369,8 @@ int main(int argc, char** argv)
     {
       publishPosesMarkers(points);
 
-      std::ifstream pathfile ("/home/bas/catkin_ws_multirob/" + text + ".path");
+      std::string packagePath = ros::package::getPath("ar_por");
+      std::ifstream pathfile (packagePath + "/paths/" + text + ".path");
       
       if (pathfile.is_open()) 
       {
@@ -435,8 +437,8 @@ int main(int argc, char** argv)
           const std::string world_frame = "/base_link";
 
           // tool center point frame (name of link associated with tool)
-          //const std::string tcp_frame = "pencil_tip";
-          const std::string tcp_frame = "tool0";
+          const std::string tcp_frame = "pencil_tip";
+          //const std::string tcp_frame = "tool0";
 
           if (!model->initialize(robot_description, group_name, world_frame, tcp_frame))
           {
@@ -472,21 +474,21 @@ int main(int argc, char** argv)
           // 5. Translate the result into a type that ROS understands
           // Generate a ROS joint trajectory with the result path, robot model, given joint names,
           // a certain time delta between each trajectory point
-          trajectory_msgs::JointTrajectory joint_solution = toROSJointTrajectory(result, *model, names, 0.01);
+          trajectory_msgs::JointTrajectory joint_solution = toROSJointTrajectory(result, *model, names, 0.1);
 
 
           //Write the path to a path file, for later reference.
-          std::ofstream outputFile("/home/bas/catkin_ws_multirob/" + text + ".path");
+          std::ofstream pathfile (packagePath + "/paths/" + text + ".path");
           for(int i=0; i<joint_solution.points.size() - 1; i++)
           {
-            outputFile << joint_solution.points[i].time_from_start << "\t";
+            pathfile << joint_solution.points[i].time_from_start << "\t";
             for(int j=0; j<6; j++)
             {
-              outputFile << joint_solution.points[i].positions[j] << "\t";
+              pathfile << joint_solution.points[i].positions[j] << "\t";
             }
-            outputFile << "\n";
+            pathfile << "\n";
           }
-          outputFile.close();
+          pathfile.close();
 
           // 6. Send the ROS trajectory to the robot for execution
           if (!executeTrajectory(joint_solution))

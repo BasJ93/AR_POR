@@ -1,0 +1,10 @@
+moveit_setup_assistant_config:
+  URDF:
+    package: irb120_pen_support
+    relative_path: urdf/irb120_pen.urdf
+  SRDF:
+    relative_path: config/irb120_pen.srdf
+  CONFIG:
+    author_name: Bas Janssen
+    author_email: smh.janssen@student.fontys.nl
+    generated_timestamp: 1509227132

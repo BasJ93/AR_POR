@@ -1,0 +1,1 @@
+rosrun moveit_kinematics create_ikfast_moveit_plugin.py irb120_pen manipulator irb120_pen_ikfast_manipulator /home/bas/catkin_ws_multirob/src/ar_por_ws/irb120_pen_ikfast_manipulator/src/irb120_pen_manipulator_ikfast_solver.cpp
