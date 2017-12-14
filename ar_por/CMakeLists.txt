@@ -19,6 +19,7 @@ find_package(catkin REQUIRED COMPONENTS
   visualization_msgs
   eigen_conversions
   tf
+  ur_descartes
 )
 find_package(Eigen REQUIRED)
 ## System dependencies are found with CMake's conventions
@@ -68,16 +69,19 @@ include_directories(
 ## The recommended prefix ensures that target names across packages don't collide
  add_executable(${PROJECT_NAME}_arm src/Alfa.cpp src/ar_por_arm.cpp)
  add_executable(${PROJECT_NAME}_arm_graph src/Alfa.cpp src/ar_por_arm_graph.cpp)
+ add_executable(${PROJECT_NAME}_arm_srv_client src/Alfa.cpp src/ar_por_arm_srv_client.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
  add_dependencies(${PROJECT_NAME}_arm ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
  add_dependencies(${PROJECT_NAME}_arm_graph ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+ add_dependencies(${PROJECT_NAME}_arm_srv_client ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 
 ## Specify libraries to link a library or executable target against
  target_link_libraries(${PROJECT_NAME}_arm ${catkin_LIBRARIES})
  target_link_libraries(${PROJECT_NAME}_arm_graph ${catkin_LIBRARIES})
+ target_link_libraries(${PROJECT_NAME}_arm_srv_client ${catkin_LIBRARIES})
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -85,6 +89,7 @@ include_directories(
 ## e.g. "rosrun someones_pkg node" instead of "rosrun someones_pkg someones_pkg_node"
  set_target_properties(${PROJECT_NAME}_arm PROPERTIES OUTPUT_NAME arm_irb120 PREFIX "")
  set_target_properties(${PROJECT_NAME}_arm_graph PROPERTIES OUTPUT_NAME arm_irb120_graph PREFIX "")
+ set_target_properties(${PROJECT_NAME}_arm_graph PROPERTIES OUTPUT_NAME arm_irb120_srv_client PREFIX "")
 
 #############
 ## Install ##

@@ -1,9 +1,14 @@
 <?xml version="1.0"?>
 <launch>
   <arg name="sim" default="true"/>
+  <!--<arg name="robot_ip" default="255.255.255.255"/>-->
   <include file="$(find irb120_pen_moveit_config)/launch/moveit_planning_execution.launch">
     <arg name="sim" value="$(arg sim)"/>
+    <!--<arg name="robot_ip" value="$(arg robot_ip)"/>-->
   </include>
-  <node name="arm_irb120" pkg="ar_por" type="arm_irb120" output="screen" />
+
+  <node name="arm_irb120_client" pkg="ar_por" type="ar_por_arm_srv_client" output="screen" />
+  
+  <node name="descartes_planning_node" pkg="descartes_planning_service" type="descartes_planning_service_node"/>
 
 </launch>

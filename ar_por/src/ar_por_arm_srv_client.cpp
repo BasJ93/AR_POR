@@ -28,6 +28,9 @@
 //So we can visualize the path
 #include <visualization_msgs/Marker.h>
 
+#include <geometry_msgs/Pose.h>
+#include <geometry_msgs/PoseArray.h>
+
 //The headers to access files.
 #include <iostream>
 #include <fstream>
@@ -39,6 +42,8 @@
 
 //Our character definitions
 #include "Alfa.h"
+
+#include "descartes_planning_service/generate_motion_plan.h"
 
 //Definitions for the path visualization
 #define   AXIS_LINE_WIDTH 0.001
@@ -236,7 +241,9 @@ int main(int argc, char** argv)
 
   while(1)
   {
-    TrajectoryVec path;
+    //Convert to PoseArray
+    //TrajectoryVec path;
+    geometry_msgs::PoseArray path;
     EigenSTL::vector_Affine3d points;
     
     std::string text;
@@ -420,62 +427,37 @@ int main(int argc, char** argv)
           for(unsigned int i = 0; i < points.size(); i++)
           {
             const Eigen::Affine3d& pose = points[i];
-            descartes_core::TrajectoryPtPtr pt = makeTolerancedCartesianPoint(pose);
-            path.push_back(pt);
+            //Convert Eigen to Pose
+            //descartes_core::TrajectoryPtPtr pt = makeTolerancedCartesianPoint(pose);
+            geometry_msgs::Pose pt;
+            tf::poseEigenToMsg(pose, pt);
+            path.poses.push_back(pt);
           }
-
-          // 2. Create a robot model and initialize it
-          descartes_core::RobotModelPtr model (new descartes_moveit::MoveitStateAdapter);
-
-          // Name of description on parameter server. Typically just "robot_description".
-          const std::string robot_description = "robot_description";
-
-          // name of the kinematic group you defined when running MoveitSetupAssistant
-          const std::string group_name = "manipulator";
-
-          // Name of frame in which you are expressing poses. Typically "world_frame" or "base_link".
-          const std::string world_frame = "/base_link";
-
-          // tool center point frame (name of link associated with tool)
-          const std::string tcp_frame = "pencil_tip";
-          //const std::string tcp_frame = "tool0";
-
-          if (!model->initialize(robot_description, group_name, world_frame, tcp_frame))
+          
+          ros::ServiceClient client = nh.serviceClient<descartes_planning_service::generate_motion_plan>("descartes_generate_motion_plan");
+          descartes_planning_service::generate_motion_plan srv;
+          srv.request.path = path;
+          srv.request.world_frame = "/base_link";
+          srv.request.tcp_frame = "pencil_tip";
+          srv.request.dt = 0.25;
+          srv.request.names = names;
+          srv.request.underdefinedAxis = "Y_AXIS";
+          if(client.call(srv))
           {
-            ROS_INFO("Could not initialize robot model");
-            return -1;
+            ROS_INFO("Got path from planning service");
           }
-
-          // 3. Create a planner and initialize it with our robot model
-          descartes_planner::DensePlanner plannerDense;
-          plannerDense.initialize(model);
-
-          TrajectoryVec result;
-          
-          clock_t t;
-          t = clock();
-          
-          // Feed the trajectory to the planner
-          if (!plannerDense.planPath(path))
+          else
           {
-            ROS_ERROR("Could not solve for a valid path");
-            return -2;
-          }
-          if (!plannerDense.getPath(result))
-          {
-            ROS_ERROR("Could not retrieve path");
-            return -3;
+            ROS_INFO("Failed to call planning service");
           }
           
-          t = clock() -t;
-          
-          ROS_INFO("Path planning took %f seconds.", ((float) t) / CLOCKS_PER_SEC);
-          
-          // 5. Translate the result into a type that ROS understands
-          // Generate a ROS joint trajectory with the result path, robot model, given joint names,
-          // a certain time delta between each trajectory point
-          trajectory_msgs::JointTrajectory joint_solution = toROSJointTrajectory(result, *model, names, 0.1);
+          trajectory_msgs::JointTrajectory joint_solution = srv.response.plan;
+          ROS_INFO("Path planning took %f seconds, for %li points.", srv.response.computeTime, srv.response.pointCount);
 
+          //Keep statistics on the paths computed, might be usefull to determine the best IK solver to use.
+          std::ofstream statsFile (packagePath + "/stats.csv", std::ofstream::app);
+          statsFile << text << "," << srv.response.pointCount << "," << srv.response.computeTime << "\n";
+        statsFile.close();
 
           //Write the path to a path file, for later reference.
           std::ofstream pathfile (packagePath + "/paths/" + text + ".path");

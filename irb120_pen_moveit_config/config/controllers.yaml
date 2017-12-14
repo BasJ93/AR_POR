@@ -1,5 +1,11 @@
 controller_list:
-  - name: IRB120 Controller Manager
+  - name: ""
     action_ns: joint_trajectory_action
     type: FollowJointTrajectory
-    joints: [arm_joint_1, arm_joint_2, arm_joint_3, arm_joint_4, arm_joint_5, arm_joint_6]
+    joints: 
+      - arm_joint_1
+      - arm_joint_2
+      - arm_joint_3
+      - arm_joint_4
+      - arm_joint_5
+      - arm_joint_6
